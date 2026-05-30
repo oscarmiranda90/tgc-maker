@@ -1,0 +1,56 @@
+Running `(cd /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/; ANDROID_HOME=/Users/oscarcrescente/Library/Android/sdk TMPDIR=/var/folders/k5/mgtyptr51xd5y66gw_2cg5bh0000gn/T/ ANDROID_NDK_ROOT=/Users/oscarcrescente/Library/Android/sdk/ndk/28.2.13676358 PATH=/Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/Users/oscarcrescente/.antigravity/antigravity/bin:/Users/oscarcrescente/Library/pnpm:/Volumes/CORSAIR/fluttersdk/flutter/bin:/Applications/LibreOffice.app/Contents/MacOS:/opt/homebrew/opt/openjdk@17/bin:/opt/homebrew/opt/ruby/bin:/opt/homebrew/share/google-cloud-sdk/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Users/oscarcrescente/Development/flutter/bin:/Users/oscarcrescente/Library/Android/sdk/platform-tools:/Users/oscarcrescente/Library/Android/sdk/emulator:/Users/oscarcrescente/.pub-cache/bin HOME=/Users/oscarcrescente ANDROID_NDK_HOME=/Users/oscarcrescente/Library/Android/sdk/ndk/28.2.13676358 /Volumes/CORSAIR/fluttersdk/flutter/bin/cache/dart-sdk/bin/dart --packages=/Volumes/CORSAIR/tgc-maker/.dart_tool/package_config.json /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/objective_c/84fd4fa0ea/hook.dill --config=/Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/objective_c/84fd4fa0ea/input.json )`.
+INFO: 2026-05-30 14:41:27.337396: Using compiler /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang from BuildInput.cCompiler.cc.
+
+INFO: 2026-05-30 14:41:27.340580: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 -c /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/src/include/dart_api_dl.c -fpic -gline-tables-only -I src -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-05-30 14:41:27.341494: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 -c /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/src/objective_c.c -fpic -gline-tables-only -I src -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c.c.o
+
+INFO: 2026-05-30 14:41:27.341795: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 -x objective-c -fobjc-arc -c /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/src/observer.m -fpic -gline-tables-only -I src -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/observer.m.o
+
+.m.o
+
+ream_adapter.m.o
+
+INFO: 2026-05-30 14:41:27.341872: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 -x objective-c -fobjc-arc -c /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/src/ns_number.m -fpic -gline-tables-only -I src -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/ns_number.m.o
+INFO: 2026-05-30 14:41:27.341951: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 -x objective-c -fobjc-arc -c /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/src/protocol.m -fpic -gline-tables-only -I src -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/protocol.m.o
+INFO: 2026-05-30 14:41:27.342033: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 -x objective-c -fobjc-arc -c /Users/oscarcrescente/.pub-cache/hosted/pub.dev/objective_c-9.4.1/src/objective_c_bindings_generated.m -fpic -gline-tables-only -I src -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-05-30 14:41:27.385856: 
+INFO: 2026-05-30 14:41:27.385922: 
+INFO: 2026-05-30 14:41:27.385943: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-05-30 14:41:27.386328: 
+INFO: 2026-05-30 14:41:27.386340: 
+INFO: 2026-05-30 14:41:27.386348: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c.c.o
+
+INFO: 2026-05-30 14:41:27.410397: 
+INFO: 2026-05-30 14:41:27.410436: 
+INFO: 2026-05-30 14:41:27.410446: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/observer.m.o
+
+INFO: 2026-05-30 14:41:27.416638: 
+INFO: 2026-05-30 14:41:27.416680: 
+INFO: 2026-05-30 14:41:27.416690: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/protocol.m.o
+
+INFO: 2026-05-30 14:41:27.476968: 
+INFO: 2026-05-30 14:41:27.477027: 
+INFO: 2026-05-30 14:41:27.477045: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/input_stream_adapter.m.o
+
+INFO: 2026-05-30 14:41:27.478500: 
+INFO: 2026-05-30 14:41:27.478541: 
+INFO: 2026-05-30 14:41:27.478551: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/ns_number.m.o
+
+INFO: 2026-05-30 14:41:27.481167: 
+INFO: 2026-05-30 14:41:27.481200: 
+INFO: 2026-05-30 14:41:27.481207: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c.m.o
+
+INFO: 2026-05-30 14:41:27.499290: 
+INFO: 2026-05-30 14:41:27.499322: 
+INFO: 2026-05-30 14:41:27.499331: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-05-30 14:41:27.499580: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -shared -Wl,-encryptable -undefined dynamic_lookup -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.2.sdk -target arm64-apple-ios-simulator -mios-version-min=13 /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/include/dart_api_dl.c.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c.c.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/input_stream_adapter.m.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c.m.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/observer.m.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/ns_number.m.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/protocol.m.o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/obj/src/objective_c_bindings_generated.m.o -o /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/objective_c.dylib
+
+INFO: 2026-05-30 14:41:27.527635: 
+INFO: 2026-05-30 14:41:27.527686: ld: warning: -undefined dynamic_lookup is deprecated on iOS-simulator
+
+INFO: 2026-05-30 14:41:27.527693: Generated /Volumes/CORSAIR/tgc-maker/.dart_tool/hooks_runner/shared/objective_c/build/84fd4fa0ea/objective_c.dylib
+

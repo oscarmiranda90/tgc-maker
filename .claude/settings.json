@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter create *)",
+      "Bash(mv /Volumes/CORSAIR/tgc-maker/tgc_maker/* /Volumes/CORSAIR/tgc-maker/)",
+      "Bash(mv /Volumes/CORSAIR/tgc-maker/tgc_maker/.* /Volumes/CORSAIR/tgc-maker/)",
+      "Bash(mkdir -p /Volumes/CORSAIR/tgc-maker/assets/shaders /Volumes/CORSAIR/tgc-maker/assets/images/demo /Volumes/CORSAIR/tgc-maker/assets/images/ui && cp /Volumes/CORSAIR/Documents/tgc_card_engine/assets/shaders/*.frag /Volumes/CORSAIR/tgc-maker/assets/shaders/ && ls /Volumes/CORSAIR/tgc-maker/assets/shaders/)",
+      "Bash(sed -i '' \"1s/import 'dart:ui' as ui;//\" /Volumes/CORSAIR/tgc-maker/lib/screens/editor_screen.dart)",
+      "Bash(sed -i '' \"1s/import 'dart:typed_data';//\" /Volumes/CORSAIR/tgc-maker/lib/screens/export_screen.dart)",
+      "Bash(sed -i '' \"/import 'package:tgc_maker\\\\/core\\\\/card_sizes.dart'/d\" /Volumes/CORSAIR/tgc-maker/lib/screens/home_screen.dart)"
+    ],
+    "additionalDirectories": [
+      "/Volumes/CORSAIR/Documents/tgc_card_engine/assets/shaders"
+    ]
+  }
+}
