@@ -3,16 +3,24 @@ import 'package:tgc_maker/models/card_layer.dart';
 
 class LayerTile extends StatelessWidget {
   final CardLayer layer;
+  final int dragIndex;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback onRename;
+  final VoidCallback onDuplicate;
   final VoidCallback onToggleVisibility;
+  final VoidCallback onDelete;
 
   const LayerTile({
     super.key,
     required this.layer,
+    required this.dragIndex,
     required this.selected,
     required this.onTap,
+    required this.onRename,
+    required this.onDuplicate,
     required this.onToggleVisibility,
+    required this.onDelete,
   });
 
   IconData get _typeIcon {
@@ -41,20 +49,28 @@ class LayerTile extends StatelessWidget {
         child: Row(
           children: [
             ReorderableDragStartListener(
-              index: 0,
-              child: const Icon(Icons.drag_handle, color: Colors.white24, size: 16),
+              index: dragIndex,
+              child: const Icon(
+                Icons.drag_handle,
+                color: Colors.white24,
+                size: 16,
+              ),
             ),
             const SizedBox(width: 8),
             Icon(_typeIcon, color: Colors.white38, size: 16),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                layer.name,
-                style: TextStyle(
-                  color: layer.visible ? Colors.white70 : Colors.white24,
-                  fontSize: 12,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onTap,
+                child: Text(
+                  layer.name,
+                  style: TextStyle(
+                    color: layer.visible ? Colors.white70 : Colors.white24,
+                    fontSize: 12,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             if (layer.shaderConfig != null)
@@ -68,9 +84,38 @@ class LayerTile extends StatelessWidget {
                 ),
               ),
             GestureDetector(
+              onTap: onRename,
+              child: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white24,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
               onTap: onToggleVisibility,
               child: Icon(
-                layer.visible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                layer.visible
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: Colors.white24,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: onDuplicate,
+              child: const Icon(
+                Icons.copy_outlined,
+                color: Colors.white24,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: onDelete,
+              child: const Icon(
+                Icons.delete_outline,
                 color: Colors.white24,
                 size: 16,
               ),

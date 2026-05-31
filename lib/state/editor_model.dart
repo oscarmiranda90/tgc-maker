@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:tgc_maker/engine/shader_registry.dart';
+import 'package:tgc_maker/engine/text_fonts.dart';
 
 enum EditorTool { none, move, addImage, addText, addColor }
 
@@ -39,4 +40,14 @@ class EditorModel extends ChangeNotifier {
 
   ui.FragmentShader? shaderFor(String asset) =>
       _shaders[asset]?.fragmentShader();
+
+  Future<void> loadFonts() async {
+    try {
+      await TextFonts.preloadAll();
+    } catch (e) {
+      debugPrint('Font preload error: $e');
+    }
+    // Repaint so the canvas renders with the now-loaded fonts.
+    notifyListeners();
+  }
 }

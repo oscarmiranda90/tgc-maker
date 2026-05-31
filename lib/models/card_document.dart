@@ -1,5 +1,6 @@
 import 'package:tgc_maker/core/card_sizes.dart';
 import 'package:tgc_maker/models/card_layer.dart';
+import 'package:tgc_maker/models/frame_config.dart';
 import 'package:tgc_maker/models/layer_group.dart';
 
 class CardDocument {
@@ -10,6 +11,7 @@ class CardDocument {
   final double cornerRadius;
   final double frameWindowInset;
   final double frameWindowRadius;
+  final FrameConfig? frameConfig;
 
   const CardDocument({
     required this.id,
@@ -19,6 +21,7 @@ class CardDocument {
     this.cornerRadius = 18.0,
     this.frameWindowInset = 12.0,
     this.frameWindowRadius = 10.0,
+    this.frameConfig,
   });
 
   List<CardLayer> get sortedLayers =>
@@ -34,6 +37,8 @@ class CardDocument {
     double? cornerRadius,
     double? frameWindowInset,
     double? frameWindowRadius,
+    FrameConfig? frameConfig,
+    bool clearFrame = false,
   }) =>
       CardDocument(
         id: id,
@@ -43,6 +48,7 @@ class CardDocument {
         cornerRadius: cornerRadius ?? this.cornerRadius,
         frameWindowInset: frameWindowInset ?? this.frameWindowInset,
         frameWindowRadius: frameWindowRadius ?? this.frameWindowRadius,
+        frameConfig: clearFrame ? null : (frameConfig ?? this.frameConfig),
       );
 
   static CardDocument blank({required CardSize size}) => CardDocument(

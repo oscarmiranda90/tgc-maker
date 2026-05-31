@@ -8,12 +8,22 @@ class ParallaxCard extends StatefulWidget {
   final double width;
   final double height;
   final Widget Function(TiltState tilt) builder;
+  final GestureTapDownCallback? onDoubleTapDown;
+  final bool Function(Offset localPosition)? shouldHandlePan;
+  final ValueChanged<Offset>? onHandledPanUpdate;
+  final bool freezeAtRest;
+  final double clipRadius;
 
   const ParallaxCard({
     super.key,
     required this.width,
     required this.height,
     required this.builder,
+    this.onDoubleTapDown,
+    this.shouldHandlePan,
+    this.onHandledPanUpdate,
+    this.freezeAtRest = false,
+    this.clipRadius = TgcConstants.cardCornerRadius,
   });
 
   @override
@@ -36,6 +46,7 @@ class _ParallaxCardState extends State<ParallaxCard>
   double _dragTiltY = 0.0;
   double _dragLightX = 0.0;
   double _dragLightY = 0.0;
+  bool _isDelegatingPan = false;
 
   @override
   void initState() {
@@ -79,12 +90,21 @@ class _ParallaxCardState extends State<ParallaxCard>
     super.dispose();
   }
 
-  void _onPanStart(DragStartDetails _) {
+  void _onPanStart(DragStartDetails details) {
+    if (widget.shouldHandlePan?.call(details.localPosition) ?? false) {
+      _isDelegatingPan = true;
+      _returnController.stop();
+      return;
+    }
     _isDragging = true;
     _returnController.stop();
   }
 
   void _onPanUpdate(DragUpdateDetails d) {
+    if (_isDelegatingPan) {
+      widget.onHandledPanUpdate?.call(d.delta);
+      return;
+    }
     final box = context.findRenderObject() as RenderBox;
     final local = box.globalToLocal(d.globalPosition);
     final nx = ((local.dx / widget.width) * 2 - 1).clamp(-1.0, 1.0);
@@ -105,6 +125,10 @@ class _ParallaxCardState extends State<ParallaxCard>
   }
 
   void _onPanEnd(DragEndDetails _) {
+    if (_isDelegatingPan) {
+      _isDelegatingPan = false;
+      return;
+    }
     _isDragging = false;
     final curve = CurvedAnimation(
       parent: _returnController,
@@ -120,25 +144,32 @@ class _ParallaxCardState extends State<ParallaxCard>
 
   @override
   Widget build(BuildContext context) {
+    final displayTilt = widget.freezeAtRest ? TiltState.zero : _tiltState;
+
     return GestureDetector(
+      onDoubleTapDown: widget.onDoubleTapDown,
       onPanStart: _onPanStart,
       onPanUpdate: _onPanUpdate,
       onPanEnd: _onPanEnd,
+      onPanCancel: () {
+        _isDragging = false;
+        _isDelegatingPan = false;
+      },
       child: Transform(
         alignment: Alignment.center,
         transform: Matrix4.identity()
           ..setEntry(3, 2, 0.001)
-          ..rotateX(_tiltState.tiltX)
-          ..rotateY(_tiltState.tiltY),
+          ..rotateX(displayTilt.tiltX)
+          ..rotateY(displayTilt.tiltY),
         child: Container(
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(TgcConstants.cardCornerRadius),
+            borderRadius: BorderRadius.circular(widget.clipRadius),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(TgcConstants.cardCornerRadius),
-            child: widget.builder(_tiltState),
+            borderRadius: BorderRadius.circular(widget.clipRadius),
+            child: widget.builder(displayTilt),
           ),
         ),
       ),

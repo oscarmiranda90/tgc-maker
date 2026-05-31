@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:tgc_maker/core/constants.dart';
 import 'package:tgc_maker/models/card_document.dart';
 import 'package:tgc_maker/models/card_layer.dart';
+import 'package:tgc_maker/models/frame_config.dart';
+import 'package:tgc_maker/models/layer_group.dart';
+import 'package:tgc_maker/engine/text_fonts.dart';
 import 'package:tgc_maker/parallax/tilt_state.dart';
 
 class CardPainter extends CustomPainter {
+  static const double maxFrameOutset = 20.0;
+
   final CardDocument document;
   final TiltState tiltState;
   final Map<String, ui.FragmentProgram> shaderPrograms;
@@ -18,18 +23,74 @@ class CardPainter extends CustomPainter {
     required this.images,
   });
 
+  /// How far the outer frame eats inward from the card edge (logical pixels).
+  /// Layers are laid out inside this border, but the card size never changes.
+  static double frameBorderForDocument(CardDocument document) {
+    final frame = document.frameConfig;
+    if (frame == null || !frame.visible) return 0.0;
+    return frame.thickness.clamp(0.0, maxFrameOutset);
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
-    final cardRect = RRect.fromRectAndRadius(
+    final frame = document.frameConfig;
+    final cardRRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Radius.circular(document.cornerRadius),
     );
 
-    canvas.save();
-    canvas.clipRRect(cardRect);
+    // The outer frame thickness eats inward from the card edge; layers fill
+    // the remaining inner area. Card size never changes (no zoom).
+    final border = frameBorderForDocument(document);
+    final contentRect = Rect.fromLTWH(
+      border,
+      border,
+      (size.width - border * 2).clamp(0.0, size.width),
+      (size.height - border * 2).clamp(0.0, size.height),
+    );
+    final contentRRect = RRect.fromRectAndRadius(
+      contentRect,
+      Radius.circular((document.cornerRadius - border).clamp(0.0, double.infinity)),
+    );
 
+    final frameVisible = frame != null && frame.visible;
+
+    canvas.save();
+    canvas.clipRRect(cardRRect);
+
+    // Pass 1: background + art layers (below the frame).
+    canvas.save();
+    canvas.clipRRect(contentRRect);
+    canvas.translate(contentRect.left, contentRect.top);
+    _paintLayers(
+      canvas,
+      contentRect.size,
+      const {LayerGroup.background, LayerGroup.art},
+    );
+    canvas.restore();
+
+    // The frame (outer border + inward band) sits above art, below layout.
+    if (frameVisible && border > 0) {
+      _drawFrame(canvas, size, contentRect, 0.0, frame);
+    }
+    if (frameVisible && frame.inwardThickness > 0) {
+      _drawInwardBand(canvas, size, 0.0, frame);
+    }
+
+    // Pass 2: layout layers (above the frame).
+    canvas.save();
+    canvas.clipRRect(contentRRect);
+    canvas.translate(contentRect.left, contentRect.top);
+    _paintLayers(canvas, contentRect.size, const {LayerGroup.layout});
+    canvas.restore();
+
+    canvas.restore();
+  }
+
+  void _paintLayers(Canvas canvas, Size size, Set<LayerGroup> groups) {
     for (final layer in document.sortedLayers) {
       if (!layer.visible) continue;
+      if (!groups.contains(layer.group)) continue;
 
       final parallax = tiltState.parallaxOffset(
         layer.depthFactor,
@@ -58,8 +119,6 @@ class CardPainter extends CustomPainter {
       if (layer.opacity < 1.0) canvas.restore();
       canvas.restore();
     }
-
-    canvas.restore();
   }
 
   void _drawImageLayer(Canvas canvas, Size size, ImageLayer layer) {
@@ -79,11 +138,21 @@ class CardPainter extends CustomPainter {
 
     final iw = img.width.toDouble();
     final ih = img.height.toDouble();
-    final cropOffX = layer.cropX * iw;
-    final cropOffY = layer.cropY * ih;
-    final src = Rect.fromLTWH(cropOffX, cropOffY, iw - cropOffX, ih - cropOffY);
+    final cropX = layer.cropX.clamp(0.0, 0.95);
+    final cropY = layer.cropY.clamp(0.0, 0.95);
+    final visibleW = drawW * (1 - cropX);
+    final visibleH = drawH * (1 - cropY);
+    final clipRect = Rect.fromLTWH(
+      dx + (drawW - visibleW) / 2,
+      dy + (drawH - visibleH) / 2,
+      visibleW,
+      visibleH,
+    );
+    final src = Rect.fromLTWH(0, 0, iw, ih);
     final dst = Rect.fromLTWH(dx, dy, drawW, drawH);
 
+    canvas.save();
+    canvas.clipRect(clipRect);
     if (layer.shaderConfig != null && layer.isFoilMask) {
       _drawFoilMask(canvas, size, img, src, dst, layer);
     } else {
@@ -92,10 +161,17 @@ class CardPainter extends CustomPainter {
         _drawShaderOverlay(canvas, size, layer.shaderConfig!);
       }
     }
+    canvas.restore();
   }
 
-  void _drawFoilMask(Canvas canvas, Size size, ui.Image img,
-      Rect src, Rect dst, ImageLayer layer) {
+  void _drawFoilMask(
+    Canvas canvas,
+    Size size,
+    ui.Image img,
+    Rect src,
+    Rect dst,
+    ImageLayer layer,
+  ) {
     final cfg = layer.shaderConfig!;
     final program = shaderPrograms[cfg.shaderAsset];
     if (program == null) {
@@ -118,10 +194,7 @@ class CardPainter extends CustomPainter {
     canvas.drawImageRect(img, src, dst, Paint());
 
     // Layer 2: shader blended with srcIn (clips to image shape)
-    canvas.saveLayer(
-      null,
-      Paint()..blendMode = BlendMode.srcIn,
-    );
+    canvas.saveLayer(null, Paint()..blendMode = BlendMode.srcIn);
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..shader = shader,
@@ -174,16 +247,16 @@ class CardPainter extends CustomPainter {
   }
 
   void _drawTextLayer(Canvas canvas, Size size, TextLayer layer) {
-    final style = ui.ParagraphStyle(
-      textAlign: layer.align,
-      maxLines: 5,
-    );
+    final style = ui.ParagraphStyle(textAlign: layer.align, maxLines: 5);
     final builder = ui.ParagraphBuilder(style)
-      ..pushStyle(ui.TextStyle(
-        color: layer.color,
-        fontSize: layer.fontSize * layer.scale,
-        fontWeight: layer.fontWeight,
-      ))
+      ..pushStyle(
+        ui.TextStyle(
+          color: layer.color,
+          fontSize: layer.fontSize * layer.scale,
+          fontWeight: layer.fontWeight,
+          fontFamily: TextFonts.familyOf(layer.fontFamily),
+        ),
+      )
       ..addText(layer.text);
     final para = builder.build()
       ..layout(ui.ParagraphConstraints(width: size.width - 32));
@@ -206,7 +279,135 @@ class CardPainter extends CustomPainter {
       bottomLeft: layer.borderRadius.bottomLeft,
       bottomRight: layer.borderRadius.bottomRight,
     );
-    canvas.drawRRect(rect, Paint()..color = layer.color);
+    final paint = Paint();
+    if (layer.gradientColor != null) {
+      paint.shader = LinearGradient(
+        begin: _gradientBegin(layer.gradientDirection),
+        end: _gradientEnd(layer.gradientDirection),
+        colors: [layer.color, layer.gradientColor!],
+      ).createShader(rect.outerRect);
+    } else {
+      paint.color = layer.color;
+    }
+    canvas.drawRRect(rect, paint);
+  }
+
+  Alignment _gradientBegin(ColorLayerGradientDirection direction) {
+    switch (direction) {
+      case ColorLayerGradientDirection.leftToRight:
+        return Alignment.centerLeft;
+      case ColorLayerGradientDirection.topLeftToBottomRight:
+        return Alignment.topLeft;
+      case ColorLayerGradientDirection.bottomLeftToTopRight:
+        return Alignment.bottomLeft;
+      case ColorLayerGradientDirection.topToBottom:
+        return Alignment.topCenter;
+    }
+  }
+
+  Alignment _gradientEnd(ColorLayerGradientDirection direction) {
+    switch (direction) {
+      case ColorLayerGradientDirection.leftToRight:
+        return Alignment.centerRight;
+      case ColorLayerGradientDirection.topLeftToBottomRight:
+        return Alignment.bottomRight;
+      case ColorLayerGradientDirection.bottomLeftToTopRight:
+        return Alignment.topRight;
+      case ColorLayerGradientDirection.topToBottom:
+        return Alignment.bottomCenter;
+    }
+  }
+
+  void _drawFrame(
+    Canvas canvas,
+    Size size,
+    Rect contentRect,
+    double frameOutset,
+    FrameConfig frame,
+  ) {
+    final border = contentRect.left;
+    final outer = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(document.cornerRadius + frameOutset),
+    );
+    final inner = RRect.fromRectAndRadius(
+      contentRect,
+      Radius.circular((document.cornerRadius - border).clamp(0.0, double.infinity)),
+    );
+
+    final path = Path()
+      ..addRRect(outer)
+      ..addRRect(inner)
+      ..fillType = PathFillType.evenOdd;
+
+    canvas.drawPath(path, Paint()..color = frame.color);
+
+    if (frame.shaderConfig != null) {
+      final program = shaderPrograms[frame.shaderConfig!.shaderAsset];
+      if (program != null) {
+        final shader = program.fragmentShader();
+        shader.setFloat(0, size.width);
+        shader.setFloat(1, size.height);
+        shader.setFloat(2, tiltState.lightX);
+        shader.setFloat(3, tiltState.lightY);
+        shader.setFloat(4, tiltState.time);
+        if (frame.shaderConfig!.sequinsPalette != -1) {
+          shader.setFloat(5, frame.shaderConfig!.sequinsPalette.toDouble());
+        }
+        canvas.save();
+        canvas.clipPath(path);
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Paint()
+            ..shader = shader
+            ..blendMode = frame.shaderConfig!.blendMode,
+        );
+        canvas.restore();
+      }
+    }
+
+  }
+
+  void _drawInwardBand(Canvas canvas, Size size, double frameOutset, FrameConfig frame) {
+    final t = frame.inwardThickness;
+    final outer = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(document.cornerRadius + frameOutset),
+    );
+    final inner = RRect.fromRectAndRadius(
+      Rect.fromLTWH(t, t, size.width - t * 2, size.height - t * 2),
+      Radius.circular((document.cornerRadius - t).clamp(0.0, double.infinity)),
+    );
+    final path = Path()
+      ..addRRect(outer)
+      ..addRRect(inner)
+      ..fillType = PathFillType.evenOdd;
+
+    canvas.drawPath(path, Paint()..color = frame.color);
+
+    if (frame.shaderConfig != null) {
+      final program = shaderPrograms[frame.shaderConfig!.shaderAsset];
+      if (program != null) {
+        final shader = program.fragmentShader();
+        shader.setFloat(0, size.width);
+        shader.setFloat(1, size.height);
+        shader.setFloat(2, tiltState.lightX);
+        shader.setFloat(3, tiltState.lightY);
+        shader.setFloat(4, tiltState.time);
+        if (frame.shaderConfig!.sequinsPalette != -1) {
+          shader.setFloat(5, frame.shaderConfig!.sequinsPalette.toDouble());
+        }
+        canvas.save();
+        canvas.clipPath(path);
+        canvas.drawRect(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Paint()
+            ..shader = shader
+            ..blendMode = frame.shaderConfig!.blendMode,
+        );
+        canvas.restore();
+      }
+    }
   }
 
   void _drawPlaceholder(Canvas canvas, Size size, ImageLayer layer) {

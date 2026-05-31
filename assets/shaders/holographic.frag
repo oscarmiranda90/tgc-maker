@@ -87,15 +87,8 @@ void main() {
     bands = bands * 0.5 + 0.5;
     holoColor = mix(holoColor, holoColor * vec3(bands * 1.3, bands * 0.9, bands * 1.1), 0.25);
 
-    // ── Dark base card color underneath ──
-    vec3 cardBase = vec3(0.05, 0.05, 0.08); // near black with slight blue
-    float holoStrength = 0.7 + specular * 0.3;
+    // Alpha drives how much holo shows — specular punches it up locally
+    float alpha = 0.55 + specular * 0.35;
 
-    vec3 finalColor = mix(cardBase, holoColor, holoStrength);
-
-    // ── Subtle vignette ──
-    float vignette = 1.0 - smoothstep(0.4, 0.9, length(uv - 0.5) * 1.4);
-    finalColor *= vignette * 1.2;
-
-    fragColor = vec4(finalColor, 1.0);
+    fragColor = vec4(holoColor, alpha);
 }

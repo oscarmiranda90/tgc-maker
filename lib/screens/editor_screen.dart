@@ -1,27 +1,176 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tgc_maker/models/card_layer.dart';
+import 'package:tgc_maker/persistence/card_store.dart';
 import 'package:tgc_maker/screens/export_screen.dart';
 import 'package:tgc_maker/state/card_model.dart';
 import 'package:tgc_maker/state/editor_model.dart';
 import 'package:tgc_maker/widgets/card_preview_widget.dart';
+import 'package:tgc_maker/widgets/common/rename_dialog.dart';
 import 'package:tgc_maker/widgets/effect_controls.dart';
+import 'package:tgc_maker/widgets/frame_editor.dart';
 import 'package:tgc_maker/widgets/layer_panel.dart';
 
-class EditorScreen extends StatelessWidget {
+class EditorScreen extends StatefulWidget {
   const EditorScreen({super.key});
+
+  @override
+  State<EditorScreen> createState() => _EditorScreenState();
+}
+
+class _EditorScreenState extends State<EditorScreen> {
+  bool _isSaved = true;
+  bool _saving = false;
+  CardModel? _cardModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.read<CardModel>();
+    if (next != _cardModel) {
+      _cardModel?.removeListener(_onCardChanged);
+      _cardModel = next;
+      _cardModel!.addListener(_onCardChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    _cardModel?.removeListener(_onCardChanged);
+    super.dispose();
+  }
+
+  void _onCardChanged() {
+    if (_isSaved) setState(() => _isSaved = false);
+  }
+
+  Future<bool> _save() async {
+    if (_saving) return false;
+    setState(() => _saving = true);
+    try {
+      final card = context.read<CardModel>();
+      await CardStore.save(card.document, card.images);
+      if (mounted) setState(() => _isSaved = true);
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<bool> _onPopRequested() async {
+    if (_isSaved) return true;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF12121A),
+        title: const Text(
+          'Unsaved changes',
+          style: TextStyle(color: Colors.white, fontSize: 14, letterSpacing: 1),
+        ),
+        content: const Text(
+          'Save your card before leaving?',
+          style: TextStyle(color: Colors.white54, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'discard'),
+            child: const Text(
+              'Discard',
+              style: TextStyle(color: Colors.white38),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 'save') {
+      final ok = await _save();
+      return ok;
+    }
+    return result == 'discard';
+  }
 
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.sizeOf(context).width > 800;
-    return isWide ? const _WideLayout() : const _NarrowLayout();
+    return _EditorScope(
+      isSaved: _isSaved,
+      saving: _saving,
+      onSave: _save,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          final canPop = await _onPopRequested();
+          if (canPop && context.mounted) Navigator.of(context).pop();
+        },
+        child: isWide ? const _WideLayout() : const _NarrowLayout(),
+      ),
+    );
   }
+}
+
+// Passes save state down to AppBar without prop drilling
+class _EditorScope extends InheritedWidget {
+  final bool isSaved;
+  final bool saving;
+  final Future<bool> Function() onSave;
+
+  const _EditorScope({
+    required this.isSaved,
+    required this.saving,
+    required this.onSave,
+    required super.child,
+  });
+
+  static _EditorScope of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_EditorScope>()!;
+
+  @override
+  bool updateShouldNotify(_EditorScope old) =>
+      isSaved != old.isSaved || saving != old.saving;
 }
 
 // ── Wide layout (tablet/desktop): 3-panel side-by-side ──────────
 class _WideLayout extends StatelessWidget {
   const _WideLayout();
+
+  void _selectLayer(BuildContext context, int layerIndex) {
+    context.read<EditorModel>().selectLayer(layerIndex);
+  }
+
+  void _moveSelectedLayer(BuildContext context, int layerIndex, Offset delta) {
+    final card = context.read<CardModel>();
+    final layers = card.document.sortedLayers;
+    if (layerIndex < 0 || layerIndex >= layers.length) return;
+    final layer = layers[layerIndex];
+    switch (layer) {
+      case ImageLayer image:
+        card.updateLayer(
+          image.id,
+          image.copyWith(position: image.position + delta),
+        );
+      case TextLayer text:
+        card.updateLayer(
+          text.id,
+          text.copyWith(position: text.position + delta),
+        );
+      default:
+        return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,15 +192,23 @@ class _WideLayout extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: CardPreviewWidget(
-                  document: card.document,
-                  shaderPrograms: editor.shaders,
-                  images: card.images,
-                  maxWidth: 280,
-                  maxHeight: 400,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.read<EditorModel>().selectLayer(null),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: CardPreviewWidget(
+                    document: card.document,
+                    shaderPrograms: editor.shaders,
+                    images: card.images,
+                    maxWidth: 280,
+                    maxHeight: 400,
+                    selectedLayerIndex: editor.selectedLayerIndex,
+                    onLayerDoubleTap: (index) => _selectLayer(context, index),
+                    onLayerDrag: (index, delta) =>
+                        _moveSelectedLayer(context, index, delta),
+                  ),
                 ),
               ),
             ),
@@ -66,7 +223,8 @@ class _WideLayout extends StatelessWidget {
                 ),
                 child: _EffectPanel(
                   layer: card.document.sortedLayers[editor.selectedLayerIndex!],
-                  onChanged: (l) => context.read<CardModel>().updateLayer(l.id, l),
+                  onChanged: (l) =>
+                      context.read<CardModel>().updateLayer(l.id, l),
                 ),
               ),
             ),
@@ -84,16 +242,37 @@ class _NarrowLayout extends StatefulWidget {
   State<_NarrowLayout> createState() => _NarrowLayoutState();
 }
 
-class _NarrowLayoutState extends State<_NarrowLayout> {
-  bool _editingLayer = false;
+enum _Panel { layers, layer, frame }
 
-  void _openEditor(BuildContext context, int layerIndex) {
+class _NarrowLayoutState extends State<_NarrowLayout> {
+  _Panel _panel = _Panel.layers;
+
+  void _openLayerEditor(BuildContext context, int layerIndex) {
     context.read<EditorModel>().selectLayer(layerIndex);
-    setState(() => _editingLayer = true);
+    setState(() => _panel = _Panel.layer);
   }
 
-  void _backToLayers() {
-    setState(() => _editingLayer = false);
+  void _back() => setState(() => _panel = _Panel.layers);
+
+  void _moveSelectedLayer(BuildContext context, int layerIndex, Offset delta) {
+    final card = context.read<CardModel>();
+    final layers = card.document.sortedLayers;
+    if (layerIndex < 0 || layerIndex >= layers.length) return;
+    final layer = layers[layerIndex];
+    switch (layer) {
+      case ImageLayer image:
+        card.updateLayer(
+          image.id,
+          image.copyWith(position: image.position + delta),
+        );
+      case TextLayer text:
+        card.updateLayer(
+          text.id,
+          text.copyWith(position: text.position + delta),
+        );
+      default:
+        return;
+    }
   }
 
   @override
@@ -102,13 +281,13 @@ class _NarrowLayoutState extends State<_NarrowLayout> {
     final editor = context.watch<EditorModel>();
     final layers = card.document.sortedLayers;
     final idx = editor.selectedLayerIndex;
-    final selectedLayer =
-        (idx != null && idx < layers.length) ? layers[idx] : null;
+    final selectedLayer = (idx != null && idx < layers.length)
+        ? layers[idx]
+        : null;
 
-    // If selected layer was deleted while editing, go back
-    if (_editingLayer && selectedLayer == null) {
+    if (_panel == _Panel.layer && selectedLayer == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _editingLayer = false);
+        if (mounted) setState(() => _panel = _Panel.layers);
       });
     }
 
@@ -119,70 +298,86 @@ class _NarrowLayoutState extends State<_NarrowLayout> {
       appBar: _EditorAppBar(title: card.document.title),
       body: Column(
         children: [
-          // Preview always visible
           SizedBox(
             height: previewHeight,
-            child: Center(
-              child: CardPreviewWidget(
-                document: card.document,
-                shaderPrograms: editor.shaders,
-                images: card.images,
-                maxWidth: MediaQuery.sizeOf(context).width - 48,
-                maxHeight: previewHeight - 16,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.read<EditorModel>().selectLayer(null),
+              child: Center(
+                child: CardPreviewWidget(
+                  document: card.document,
+                  shaderPrograms: editor.shaders,
+                  images: card.images,
+                  maxWidth: MediaQuery.sizeOf(context).width - 48,
+                  maxHeight: previewHeight - 16,
+                  selectedLayerIndex: editor.selectedLayerIndex,
+                  onLayerDoubleTap: (index) => _openLayerEditor(context, index),
+                  onLayerDrag: (index, delta) =>
+                      _moveSelectedLayer(context, index, delta),
+                ),
               ),
             ),
           ),
           const Divider(height: 1, color: Colors.white12),
-          // Panel header
           _PanelHeader(
-            editingLayer: _editingLayer,
+            panel: _panel,
             selectedLayer: selectedLayer,
-            onBack: _backToLayers,
-            onAddLayer: _editingLayer
-                ? null
-                : () => _showAddMenu(context),
+            onBack: _back,
+            onAddLayer: _panel == _Panel.layers
+                ? () => showAddLayerSheet(context)
+                : null,
+            onFrameTap: _panel == _Panel.layers
+                ? () => setState(() => _panel = _Panel.frame)
+                : null,
           ),
           const Divider(height: 1, color: Colors.white12),
-          // Panel body
           Expanded(
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              child: _editingLayer && selectedLayer != null
-                  ? KeyedSubtree(
-                      key: ValueKey(selectedLayer.id),
-                      child: _EffectPanel(
-                        layer: selectedLayer,
-                        onChanged: (l) =>
-                            context.read<CardModel>().updateLayer(l.id, l),
-                      ),
-                    )
-                  : KeyedSubtree(
-                      key: const ValueKey('layers'),
-                      child: LayerPanel(
-                        onLayerTap: (index) => _openEditor(context, index),
-                      ),
-                    ),
+              child: switch (_panel) {
+                _Panel.layer when selectedLayer != null => KeyedSubtree(
+                  key: ValueKey(selectedLayer.id),
+                  child: _EffectPanel(
+                    layer: selectedLayer,
+                    onChanged: (l) =>
+                        context.read<CardModel>().updateLayer(l.id, l),
+                  ),
+                ),
+                _Panel.frame => KeyedSubtree(
+                  key: const ValueKey('frame'),
+                  child: FrameEditor(
+                    frameConfig: card.document.frameConfig,
+                    onChanged: (cfg) => context.read<CardModel>().setFrame(cfg),
+                  ),
+                ),
+                _ => KeyedSubtree(
+                  key: const ValueKey('layers'),
+                  child: LayerPanel(
+                    onLayerTap: (i) => _openLayerEditor(context, i),
+                  ),
+                ),
+              },
             ),
           ),
         ],
       ),
     );
   }
-
-  void _showAddMenu(BuildContext context) => showAddLayerSheet(context);
 }
 
 class _PanelHeader extends StatelessWidget {
-  final bool editingLayer;
+  final _Panel panel;
   final CardLayer? selectedLayer;
   final VoidCallback onBack;
   final VoidCallback? onAddLayer;
+  final VoidCallback? onFrameTap;
 
   const _PanelHeader({
-    required this.editingLayer,
+    required this.panel,
     required this.selectedLayer,
     required this.onBack,
     required this.onAddLayer,
+    required this.onFrameTap,
   });
 
   @override
@@ -191,17 +386,22 @@ class _PanelHeader extends StatelessWidget {
       height: 40,
       child: Row(
         children: [
-          if (editingLayer) ...[
+          if (panel != _Panel.layers) ...[
             IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: Colors.white54, size: 16),
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white54,
+                size: 16,
+              ),
               onPressed: onBack,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               constraints: const BoxConstraints(),
             ),
             Expanded(
               child: Text(
-                selectedLayer?.name.toUpperCase() ?? '',
+                panel == _Panel.frame
+                    ? 'FRAME'
+                    : (selectedLayer?.name.toUpperCase() ?? ''),
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 10,
@@ -223,6 +423,17 @@ class _PanelHeader extends StatelessWidget {
               ),
             ),
             const Spacer(),
+            IconButton(
+              icon: const Icon(
+                Icons.border_style_outlined,
+                color: Colors.white38,
+                size: 18,
+              ),
+              onPressed: onFrameTap,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              tooltip: 'Frame',
+            ),
             if (onAddLayer != null)
               IconButton(
                 icon: const Icon(Icons.add, color: Colors.white54, size: 20),
@@ -246,18 +457,71 @@ class _EditorAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scope = _EditorScope.of(context);
+    final card = context.watch<CardModel>();
+    final frameVisible = card.document.frameConfig?.visible ?? false;
+
     return AppBar(
       backgroundColor: const Color(0xFF0A0A0F),
       foregroundColor: Colors.white,
-      title: Text(
-        title.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 12,
-          letterSpacing: 3,
-          fontWeight: FontWeight.w700,
+      title: GestureDetector(
+        onTap: () async {
+          final cardModel = context.read<CardModel>();
+          final name = await showRenameDialog(
+            context,
+            title: 'Rename Card',
+            initialValue: cardModel.document.title,
+          );
+          if (name != null) cardModel.setTitle(name);
+        },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title.toUpperCase(),
+              style: const TextStyle(
+                fontSize: 12,
+                letterSpacing: 3,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.edit_outlined, size: 13, color: Colors.white24),
+          ],
         ),
       ),
       actions: [
+        IconButton(
+          icon: Icon(
+            frameVisible
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+            color: frameVisible ? Colors.white54 : Colors.white24,
+          ),
+          tooltip: frameVisible ? 'Hide frame' : 'Show frame',
+          onPressed: () => context.read<CardModel>().toggleFrameVisibility(),
+        ),
+        if (scope.saving)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white38,
+              ),
+            ),
+          )
+        else
+          IconButton(
+            icon: Icon(
+              scope.isSaved ? Icons.save_outlined : Icons.save,
+              color: scope.isSaved ? Colors.white24 : Colors.white70,
+            ),
+            tooltip: 'Save',
+            onPressed: () => scope.onSave(),
+          ),
         IconButton(
           icon: const Icon(Icons.file_download_outlined, color: Colors.white54),
           onPressed: () => Navigator.push(

@@ -8,6 +8,9 @@ class TgcSliderRow extends StatelessWidget {
   final int divisions;
   final ValueChanged<double> onChanged;
 
+  /// When provided, double-tapping the row resets the value to this default.
+  final double? defaultValue;
+
   const TgcSliderRow({
     super.key,
     required this.label,
@@ -16,41 +19,47 @@ class TgcSliderRow extends StatelessWidget {
     this.min = 0.0,
     this.max = 1.0,
     this.divisions = 100,
+    this.defaultValue,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              color: Colors.white38,
-              fontSize: 9,
-              letterSpacing: 1.5,
+    return GestureDetector(
+      onDoubleTap: defaultValue == null
+          ? null
+          : () => onChanged(defaultValue!.clamp(min, max)),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 9,
+                letterSpacing: 1.5,
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: Slider(
-            value: value.clamp(min, max),
-            min: min,
-            max: max,
-            divisions: divisions,
-            onChanged: onChanged,
+          Expanded(
+            child: Slider(
+              value: value.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: divisions,
+              onChanged: onChanged,
+            ),
           ),
-        ),
-        SizedBox(
-          width: 36,
-          child: Text(
-            value.toStringAsFixed(2),
-            style: const TextStyle(color: Colors.white54, fontSize: 10),
-            textAlign: TextAlign.right,
+          SizedBox(
+            width: 36,
+            child: Text(
+              value.toStringAsFixed(2),
+              style: const TextStyle(color: Colors.white54, fontSize: 10),
+              textAlign: TextAlign.right,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

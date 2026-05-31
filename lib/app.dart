@@ -26,6 +26,7 @@ class _TgcMakerAppState extends State<TgcMakerApp> {
     // Load shaders once at boot
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _editorModel.loadShaders();
+      _editorModel.loadFonts();
     });
   }
 

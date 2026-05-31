@@ -1,0 +1,1 @@
+ /Volumes/CORSAIR/tgc-maker/.dart_tool/flutter_build/17a3b89fc01606fb89ffccb2441cf114/dart_build_result.json:  /Volumes/CORSAIR/fluttersdk/flutter/bin/cache/dart-sdk/version /Volumes/CORSAIR/tgc-maker/.dart_tool/package_config.json /Volumes/CORSAIR/tgc-maker/pubspec.yaml
