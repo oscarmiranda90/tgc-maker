@@ -8,7 +8,8 @@
       "Bash(sed -i '' \"1s/import 'dart:ui' as ui;//\" /Volumes/CORSAIR/tgc-maker/lib/screens/editor_screen.dart)",
       "Bash(sed -i '' \"1s/import 'dart:typed_data';//\" /Volumes/CORSAIR/tgc-maker/lib/screens/export_screen.dart)",
       "Bash(sed -i '' \"/import 'package:tgc_maker\\\\/core\\\\/card_sizes.dart'/d\" /Volumes/CORSAIR/tgc-maker/lib/screens/home_screen.dart)",
-      "Bash(grep -E '\\\\.\\(png|jpg|jpeg|webp\\)$')"
+      "Bash(grep -E '\\\\.\\(png|jpg|jpeg|webp\\)$')",
+      "Bash(perl -0pi -e 's/        layers: \\\\[/        front: CardFace\\(layers: [/g; s/        \\\\],\\\\n      \\\\\\);/        ]\\),\\\\n      \\);/g' lib/demo/demo_card_presets.dart)"
     ],
     "additionalDirectories": [
       "/Volumes/CORSAIR/Documents/tgc_card_engine/assets/shaders"
