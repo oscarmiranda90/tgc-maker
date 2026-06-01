@@ -42,7 +42,7 @@ Compatibility policy:
 ## Local development (package + standalone tester)
 
 ```bash
-git clone https://github.com/tgcmaker/tgc-maker.git
+git clone https://github.com/oscarmiranda90/tgc-maker.git
 cd tgc-maker
 flutter pub get
 (cd example && flutter pub get)
@@ -63,7 +63,7 @@ Until published to pub.dev, install from GitHub:
 dependencies:
   tgc_maker:
     git:
-      url: https://github.com/tgcmaker/tgc-maker.git
+      url: https://github.com/oscarmiranda90/tgc-maker.git
 ```
 
 Then import the public API:
