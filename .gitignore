@@ -1,0 +1,28 @@
+# OS / editor
+.DS_Store
+*.iml
+
+# Keep package library paths explicitly not ignored
+!lib/app.dart
+!lib/main.dart
+
+# Flutter / Dart tooling
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Build outputs
+build/
+
+# iOS dependency artifacts
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+
+# Android / Gradle cache artifacts
+android/.gradle/
+
+# Local environment files
+android/local.properties

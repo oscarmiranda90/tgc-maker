@@ -1,0 +1,20 @@
+# Generated and tool state
+.dart_tool/
+build/
+.flutter-plugins-dependencies
+
+# IDE and local metadata
+.vscode/
+.claude/
+*.iml
+
+# Standalone app platform wrappers not needed for package consumers
+android/
+ios/
+web/
+
+# Deployment/config folders not required for package API
+cloudflare-pages/
+
+# Lockfile is for applications, not published packages
+pubspec.lock
