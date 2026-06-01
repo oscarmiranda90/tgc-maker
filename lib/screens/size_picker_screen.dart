@@ -17,6 +17,8 @@ class _SizePickerScreenState extends State<SizePickerScreen> {
   final _wCtrl = TextEditingController(text: '750');
   final _hCtrl = TextEditingController(text: '1050');
 
+  static const _panelMaxWidth = 860.0;
+
   @override
   void dispose() {
     _wCtrl.dispose();
@@ -33,102 +35,152 @@ class _SizePickerScreenState extends State<SizePickerScreen> {
         backgroundColor: const Color(0xFF0A0A0F),
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'CARD SIZE',
-              style: TextStyle(
-                color: Colors.white38,
-                fontSize: 10,
-                letterSpacing: 3,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                _SizeCard(
-                  label: 'Standard',
-                  subtitle: '63 × 88 mm',
-                  detail: '750 × 1050 px',
-                  size: CardSize.standard,
-                  selected: _selected == CardSize.standard,
-                  onTap: () => setState(() => _selected = CardSize.standard),
-                ),
-                const SizedBox(width: 16),
-                _SizeCard(
-                  label: 'Japanese',
-                  subtitle: '59 × 86 mm',
-                  detail: '700 × 1015 px',
-                  size: CardSize.japanese,
-                  selected: _selected == CardSize.japanese,
-                  onTap: () => setState(() => _selected = CardSize.japanese),
-                ),
-                const SizedBox(width: 16),
-                _SizeCard(
-                  label: 'Custom',
-                  subtitle: 'Your size',
-                  detail: 'Set below',
-                  size: CardSize.custom(750, 1050),
-                  selected: _selected?.preset == CardSizePreset.custom,
-                  onTap: () => setState(() => _selected = CardSize.custom(
-                        double.tryParse(_wCtrl.text) ?? 750,
-                        double.tryParse(_hCtrl.text) ?? 1050,
-                      )),
-                ),
-              ],
-            ),
-            if (_selected?.preset == CardSizePreset.custom) ...[
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: _NumField(
-                      label: 'WIDTH (px)',
-                      controller: _wCtrl,
-                      onChanged: (_) => setState(() => _selected = CardSize.custom(
-                            double.tryParse(_wCtrl.text) ?? 750,
-                            double.tryParse(_hCtrl.text) ?? 1050,
-                          )),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final panelWidth = constraints.maxWidth > _panelMaxWidth
+              ? _panelMaxWidth
+              : constraints.maxWidth;
+          final cardWidth = panelWidth >= 780
+              ? (panelWidth - 32) / 3
+              : panelWidth >= 520
+              ? (panelWidth - 16) / 2
+              : panelWidth;
+
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: SizedBox(
+                  width: panelWidth,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'CARD SIZE',
+                          style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 10,
+                            letterSpacing: 3,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
+                          children: [
+                            SizedBox(
+                              width: cardWidth,
+                              child: _SizeCard(
+                                label: 'Standard',
+                                subtitle: '63 × 88 mm',
+                                detail: '750 × 1050 px',
+                                size: CardSize.standard,
+                                selected: _selected == CardSize.standard,
+                                onTap: () => setState(
+                                  () => _selected = CardSize.standard,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: cardWidth,
+                              child: _SizeCard(
+                                label: 'Japanese',
+                                subtitle: '59 × 86 mm',
+                                detail: '700 × 1015 px',
+                                size: CardSize.japanese,
+                                selected: _selected == CardSize.japanese,
+                                onTap: () => setState(
+                                  () => _selected = CardSize.japanese,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: cardWidth,
+                              child: _SizeCard(
+                                label: 'Custom',
+                                subtitle: 'Your size',
+                                detail: 'Set below',
+                                size: CardSize.custom(750, 1050),
+                                selected:
+                                    _selected?.preset == CardSizePreset.custom,
+                                onTap: () => setState(
+                                  () => _selected = CardSize.custom(
+                                    double.tryParse(_wCtrl.text) ?? 750,
+                                    double.tryParse(_hCtrl.text) ?? 1050,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_selected?.preset == CardSizePreset.custom) ...[
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _NumField(
+                                  label: 'WIDTH (px)',
+                                  controller: _wCtrl,
+                                  onChanged: (_) => setState(
+                                    () => _selected = CardSize.custom(
+                                      double.tryParse(_wCtrl.text) ?? 750,
+                                      double.tryParse(_hCtrl.text) ?? 1050,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _NumField(
+                                  label: 'HEIGHT (px)',
+                                  controller: _hCtrl,
+                                  onChanged: (_) => setState(
+                                    () => _selected = CardSize.custom(
+                                      double.tryParse(_wCtrl.text) ?? 750,
+                                      double.tryParse(_hCtrl.text) ?? 1050,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _selected != null
+                                  ? Colors.white
+                                  : Colors.white12,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            onPressed: _selected == null ? null : _proceed,
+                            child: const Text(
+                              'CREATE CARD',
+                              style: TextStyle(
+                                letterSpacing: 3,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _NumField(
-                      label: 'HEIGHT (px)',
-                      controller: _hCtrl,
-                      onChanged: (_) => setState(() => _selected = CardSize.custom(
-                            double.tryParse(_wCtrl.text) ?? 750,
-                            double.tryParse(_hCtrl.text) ?? 1050,
-                          )),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: _selected != null ? Colors.white : Colors.white12,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                onPressed: _selected == null ? null : _proceed,
-                child: const Text(
-                  'CREATE CARD',
-                  style: TextStyle(letterSpacing: 3, fontWeight: FontWeight.w800, fontSize: 13),
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -162,44 +214,51 @@ class _SizeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFF1C1C28) : const Color(0xFF12121A),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: selected ? Colors.white54 : Colors.white12,
-              width: selected ? 1.5 : 1,
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF1C1C28) : const Color(0xFF12121A),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? Colors.white54 : Colors.white12,
+            width: selected ? 1.5 : 1,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
-                aspectRatio: size.aspectRatio,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0A0A1E),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Colors.white12),
-                  ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: size.aspectRatio,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A0A1E),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.white12),
                 ),
               ),
-              const SizedBox(height: 12),
-              Text(label,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text(subtitle,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
-              Text(detail,
-                  style: const TextStyle(color: Colors.white30, fontSize: 10)),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
+            ),
+            Text(
+              detail,
+              style: const TextStyle(color: Colors.white30, fontSize: 10),
+            ),
+          ],
         ),
       ),
     );
@@ -222,9 +281,14 @@ class _NumField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                color: Colors.white38, fontSize: 10, letterSpacing: 2)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white38,
+            fontSize: 10,
+            letterSpacing: 2,
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,

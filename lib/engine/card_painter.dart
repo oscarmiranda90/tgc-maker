@@ -50,7 +50,9 @@ class CardPainter extends CustomPainter {
     );
     final contentRRect = RRect.fromRectAndRadius(
       contentRect,
-      Radius.circular((document.cornerRadius - border).clamp(0.0, double.infinity)),
+      Radius.circular(
+        (document.cornerRadius - border).clamp(0.0, double.infinity),
+      ),
     );
 
     final frameVisible = frame != null && frame.visible;
@@ -62,27 +64,27 @@ class CardPainter extends CustomPainter {
     canvas.save();
     canvas.clipRRect(contentRRect);
     canvas.translate(contentRect.left, contentRect.top);
-    _paintLayers(
-      canvas,
-      contentRect.size,
-      const {LayerGroup.background, LayerGroup.art},
-    );
+    _paintLayers(canvas, contentRect.size, const {
+      LayerGroup.background,
+      LayerGroup.art,
+    });
     canvas.restore();
 
     // The frame (outer border + inward band) sits above art, below layout.
     if (frameVisible && border > 0) {
       _drawFrame(canvas, size, contentRect, 0.0, frame);
     }
-    if (frameVisible && frame.inwardThickness > 0) {
-      _drawInwardBand(canvas, size, 0.0, frame);
-    }
-
     // Pass 2: layout layers (above the frame).
     canvas.save();
     canvas.clipRRect(contentRRect);
     canvas.translate(contentRect.left, contentRect.top);
     _paintLayers(canvas, contentRect.size, const {LayerGroup.layout});
     canvas.restore();
+
+    // Draw the inward band last so it remains visible above layout elements.
+    if (frameVisible && frame.inwardThickness > 0) {
+      _drawInwardBand(canvas, size, contentRect, frame);
+    }
 
     canvas.restore();
   }
@@ -332,7 +334,9 @@ class CardPainter extends CustomPainter {
     );
     final inner = RRect.fromRectAndRadius(
       contentRect,
-      Radius.circular((document.cornerRadius - border).clamp(0.0, double.infinity)),
+      Radius.circular(
+        (document.cornerRadius - border).clamp(0.0, double.infinity),
+      ),
     );
 
     final path = Path()
@@ -365,18 +369,36 @@ class CardPainter extends CustomPainter {
         canvas.restore();
       }
     }
-
   }
 
-  void _drawInwardBand(Canvas canvas, Size size, double frameOutset, FrameConfig frame) {
-    final t = frame.inwardThickness;
+  void _drawInwardBand(
+    Canvas canvas,
+    Size size,
+    Rect contentRect,
+    FrameConfig frame,
+  ) {
+    final maxInset = (contentRect.shortestSide / 2).clamp(0.0, double.infinity);
+    final t = frame.inwardThickness.clamp(0.0, maxInset);
+    final border = contentRect.left;
+
+    // The inward band starts from the frame's inner edge and grows inward.
     final outer = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Radius.circular(document.cornerRadius + frameOutset),
+      contentRect,
+      Radius.circular(
+        (document.cornerRadius - border).clamp(0.0, double.infinity),
+      ),
+    );
+    final innerRect = Rect.fromLTWH(
+      contentRect.left + t,
+      contentRect.top + t,
+      (contentRect.width - t * 2).clamp(0.0, contentRect.width),
+      (contentRect.height - t * 2).clamp(0.0, contentRect.height),
     );
     final inner = RRect.fromRectAndRadius(
-      Rect.fromLTWH(t, t, size.width - t * 2, size.height - t * 2),
-      Radius.circular((document.cornerRadius - t).clamp(0.0, double.infinity)),
+      innerRect,
+      Radius.circular(
+        (document.cornerRadius - border - t).clamp(0.0, double.infinity),
+      ),
     );
     final path = Path()
       ..addRRect(outer)

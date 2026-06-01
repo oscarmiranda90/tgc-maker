@@ -7,31 +7,59 @@
         {
             "name": "tgc-maker",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "program": "example/lib/main.dart"
         },
         {
             "name": "tgc-maker (profile mode)",
             "request": "launch",
             "type": "dart",
+            "program": "example/lib/main.dart",
             "flutterMode": "profile"
         },
         {
             "name": "tgc-maker (release mode)",
             "request": "launch",
             "type": "dart",
+            "program": "example/lib/main.dart",
             "flutterMode": "release"
         },
         {
             "name": "example",
             "cwd": "example",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "program": "lib/main.dart"
+        },
+        {
+            "name": "example creator",
+            "cwd": "example",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/creator_main.dart"
+        },
+        {
+            "name": "example (chrome)",
+            "cwd": "example",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "deviceId": "chrome"
+        },
+        {
+            "name": "example creator (chrome)",
+            "cwd": "example",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/creator_main.dart",
+            "deviceId": "chrome"
         },
         {
             "name": "example (profile mode)",
             "cwd": "example",
             "request": "launch",
             "type": "dart",
+            "program": "lib/main.dart",
             "flutterMode": "profile"
         },
         {
@@ -39,6 +67,7 @@
             "cwd": "example",
             "request": "launch",
             "type": "dart",
+            "program": "lib/main.dart",
             "flutterMode": "release"
         }
     ]

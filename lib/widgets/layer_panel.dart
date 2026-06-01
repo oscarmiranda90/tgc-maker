@@ -279,6 +279,10 @@ class _AddLayerSheet extends StatefulWidget {
 class _AddLayerSheetState extends State<_AddLayerSheet> {
   bool _picking = false;
 
+  double _defaultDepthForGroup(LayerGroup group) {
+    return group == LayerGroup.art ? 0.3 : 0.0;
+  }
+
   List<_AddAction> get _actions {
     switch (widget.group) {
       case LayerGroup.background:
@@ -412,7 +416,7 @@ class _AddLayerSheetState extends State<_AddLayerSheet> {
           name: _nextImageName(widget.cardModel),
           imageBytes: bytes,
           scale: 1.0,
-          depthFactor: 0.3,
+          depthFactor: _defaultDepthForGroup(group),
         ),
       );
       widget.cardModel.addImage(id, image);
@@ -451,7 +455,7 @@ class _AddLayerSheetState extends State<_AddLayerSheet> {
           zIndex: zIndex,
           name: 'Color Block',
           color: const Color(0xFF1a1a3a),
-          depthFactor: 0.5,
+          depthFactor: 0.0,
         ),
       );
     }

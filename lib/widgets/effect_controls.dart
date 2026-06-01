@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:image_background_remover/image_background_remover.dart';
@@ -492,6 +493,7 @@ class _RemoveBackgroundButton extends StatefulWidget {
 
 class _RemoveBackgroundButtonState extends State<_RemoveBackgroundButton> {
   bool _busy = false;
+  bool get _supported => !kIsWeb;
   // Cutout strength. Lower = keep more of the subject (softer removal).
   double _strength = 0.5;
   // Untouched source, captured before the first removal so re-running with a
@@ -502,6 +504,17 @@ class _RemoveBackgroundButtonState extends State<_RemoveBackgroundButton> {
 
   Future<void> _removeBackground() async {
     if (_busy) return;
+    if (!_supported) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Remove BG is not available on web yet. Use iOS/Android/macOS build.',
+          ),
+        ),
+      );
+      return;
+    }
     setState(() => _busy = true);
 
     try {
@@ -587,7 +600,7 @@ class _RemoveBackgroundButtonState extends State<_RemoveBackgroundButton> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: _busy ? null : _removeBackground,
+            onPressed: (_busy || !_supported) ? null : _removeBackground,
             icon: _busy
                 ? const SizedBox(
                     width: 14,
@@ -596,17 +609,16 @@ class _RemoveBackgroundButtonState extends State<_RemoveBackgroundButton> {
                   )
                 : const Icon(Icons.auto_fix_high_outlined, size: 16),
             label: Text(
-              _busy
+              !_supported
+                  ? 'Remove BG (native only)'
+                  : _busy
                   ? 'Removing...'
                   : (_originalBytes != null ? 'Re-run BG' : 'Remove BG'),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white70,
               side: const BorderSide(color: Colors.white12),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               alignment: Alignment.centerLeft,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

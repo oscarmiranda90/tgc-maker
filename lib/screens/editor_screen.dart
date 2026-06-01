@@ -159,6 +159,26 @@ class _WideLayout extends StatelessWidget {
     context.read<CardModel>().flip();
   }
 
+  void _openFrameEditor(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF12121A),
+      isScrollControlled: true,
+      builder: (_) {
+        final card = context.watch<CardModel>();
+        return SafeArea(
+          child: SizedBox(
+            height: 420,
+            child: FrameEditor(
+              frameConfig: card.document.frameConfig,
+              onChanged: (cfg) => context.read<CardModel>().setFrame(cfg),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _moveSelectedLayer(BuildContext context, int layerIndex, Offset delta) {
     final card = context.read<CardModel>();
     final layers = card.document.sortedLayers;
@@ -236,6 +256,23 @@ class _WideLayout extends StatelessWidget {
                   child: _FlipButton(
                     side: card.document.activeSide,
                     onPressed: () => _flipCard(context),
+                  ),
+                ),
+                Positioned(
+                  top: 64,
+                  right: 16,
+                  child: Material(
+                    color: const Color(0xFF1C1C28),
+                    borderRadius: BorderRadius.circular(8),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.border_style_outlined,
+                        color: Colors.white70,
+                        size: 18,
+                      ),
+                      tooltip: 'Frame',
+                      onPressed: () => _openFrameEditor(context),
+                    ),
                   ),
                 ),
               ],

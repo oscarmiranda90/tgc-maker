@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -59,6 +58,11 @@ class TiltController {
   }
 
   void resetToGyro() {
+    if (kIsWeb) {
+      _gyroTiltX = 0.0;
+      _gyroTiltY = 0.0;
+      return;
+    }
     _gyroTiltX = _tiltX;
     _gyroTiltY = _tiltY;
   }
@@ -66,23 +70,22 @@ class TiltController {
   void _onTick(Duration elapsed) {
     _elapsedSeconds = elapsed.inMilliseconds / 1000.0;
 
-    if (kIsWeb) {
-      _gyroTiltX = sin(_elapsedSeconds * 0.65) * 0.15;
-      _gyroTiltY = cos(_elapsedSeconds * 0.48) * 0.15;
-    }
-
     const s = TgcConstants.gyroSmoothing;
     _tiltX += (_gyroTiltX - _tiltX) * s;
     _tiltY += (_gyroTiltY - _tiltY) * s;
-    _lightX += ((_gyroTiltY / TgcConstants.maxTilt).clamp(-1.0, 1.0) - _lightX) * s;
-    _lightY += ((-_gyroTiltX / TgcConstants.maxTilt).clamp(-1.0, 1.0) - _lightY) * s;
+    _lightX +=
+        ((_gyroTiltY / TgcConstants.maxTilt).clamp(-1.0, 1.0) - _lightX) * s;
+    _lightY +=
+        ((-_gyroTiltX / TgcConstants.maxTilt).clamp(-1.0, 1.0) - _lightY) * s;
 
-    _streamController.add(TiltState(
-      tiltX: _tiltX,
-      tiltY: _tiltY,
-      lightX: _lightX,
-      lightY: _lightY,
-      time: _elapsedSeconds,
-    ));
+    _streamController.add(
+      TiltState(
+        tiltX: _tiltX,
+        tiltY: _tiltY,
+        lightX: _lightX,
+        lightY: _lightY,
+        time: _elapsedSeconds,
+      ),
+    );
   }
 }

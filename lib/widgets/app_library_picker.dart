@@ -25,6 +25,10 @@ class _AppLibraryPickerState extends State<AppLibraryPicker> {
   List<String> _assets = [];
   String? _loading;
 
+  double get _defaultDepthForTargetGroup {
+    return widget.targetGroup == LayerGroup.art ? 0.3 : 0.0;
+  }
+
   // Derive a layer name from the asset path: the filename without extension
   // (e.g. 'assets/frames/frame1.png' -> 'frame1').
   String _nameFromAsset(String assetPath) {
@@ -87,7 +91,7 @@ class _AppLibraryPickerState extends State<AppLibraryPicker> {
           name: _nameFromAsset(assetPath),
           assetPath: assetPath,
           scale: 1.0,
-          depthFactor: 0.3,
+          depthFactor: _defaultDepthForTargetGroup,
         ),
       );
       widget.cardModel.addImage(id, image);

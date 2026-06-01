@@ -1,9 +1,12 @@
-
 import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tgc_maker/engine/card_painter.dart';
+import 'package:tgc_maker/engine/gloss_painter.dart';
+import 'package:tgc_maker/models/card_face.dart';
+import 'package:tgc_maker/parallax/tilt_state.dart';
 import 'package:tgc_maker/state/card_model.dart';
 import 'package:tgc_maker/state/editor_model.dart';
 import 'package:tgc_maker/widgets/card_preview_widget.dart';
@@ -16,7 +19,6 @@ class ExportScreen extends StatefulWidget {
 }
 
 class _ExportScreenState extends State<ExportScreen> {
-  final _repaintKey = GlobalKey();
   bool _exporting = false;
 
   @override
@@ -42,10 +44,10 @@ class _ExportScreenState extends State<ExportScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             RepaintBoundary(
-              key: _repaintKey,
               child: CardPreviewWidget(
                 document: card.document,
                 shaderPrograms: editor.shaders,
+                images: card.images,
                 maxWidth: 280,
                 maxHeight: 400,
                 enableParallax: false,
@@ -71,7 +73,10 @@ class _ExportScreenState extends State<ExportScreen> {
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -95,17 +100,64 @@ class _ExportScreenState extends State<ExportScreen> {
   Future<void> _export() async {
     setState(() => _exporting = true);
     try {
-      final boundary = _repaintKey.currentContext!.findRenderObject()
-          as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) return;
+      final card = context.read<CardModel>();
+      final editor = context.read<EditorModel>();
+      final frontBytes = await _renderSidePng(CardSide.front, card, editor);
+      final backBytes = await _renderSidePng(CardSide.back, card, editor);
 
-      final bytes = byteData.buffer.asUint8List();
-      final file = XFile.fromData(bytes, mimeType: 'image/png', name: 'card.png');
-      await SharePlus.instance.share(ShareParams(files: [file]));
+      final baseName = _safeFileName(card.document.title);
+      final files = [
+        XFile.fromData(
+          frontBytes,
+          mimeType: 'image/png',
+          name: '${baseName}_front.png',
+        ),
+        XFile.fromData(
+          backBytes,
+          mimeType: 'image/png',
+          name: '${baseName}_back.png',
+        ),
+      ];
+      await SharePlus.instance.share(ShareParams(files: files));
     } finally {
       setState(() => _exporting = false);
     }
+  }
+
+  Future<Uint8List> _renderSidePng(
+    CardSide side,
+    CardModel card,
+    EditorModel editor,
+  ) async {
+    final doc = card.document.copyWith(activeSide: side);
+    final width = doc.size.widthPx.round();
+    final height = doc.size.heightPx.round();
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final size = Size(width.toDouble(), height.toDouble());
+    const tilt = TiltState.zero;
+
+    CardPainter(
+      document: doc,
+      tiltState: tilt,
+      shaderPrograms: editor.shaders,
+      images: card.images,
+    ).paint(canvas, size);
+    const GlossPainter(lightX: 0.0, lightY: 0.0).paint(canvas, size);
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(width, height);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) {
+      throw StateError('Failed to encode export image for ${side.name} side.');
+    }
+    return byteData.buffer.asUint8List();
+  }
+
+  String _safeFileName(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return 'card';
+    final cleaned = trimmed.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+    return cleaned.replaceAll(RegExp(r'_+'), '_');
   }
 }
