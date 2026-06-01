@@ -1,0 +1,5 @@
+# Wrangler local state
+.wrangler/
+
+# Build output mirror (kept in sync with /build/web)
+_build/

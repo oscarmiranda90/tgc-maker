@@ -29,7 +29,7 @@ class EditorModel extends ChangeNotifier {
   Future<void> loadShaders() async {
     for (final asset in TgcShaders.all) {
       try {
-        _shaders[asset] = await ui.FragmentProgram.fromAsset(asset);
+        _shaders[asset] = await _loadShaderProgram(asset);
       } catch (e) {
         debugPrint('Shader load error [$asset]: $e');
       }
@@ -40,6 +40,23 @@ class EditorModel extends ChangeNotifier {
 
   ui.FragmentShader? shaderFor(String asset) =>
       _shaders[asset]?.fragmentShader();
+
+  Future<ui.FragmentProgram> _loadShaderProgram(String asset) async {
+    try {
+      return await ui.FragmentProgram.fromAsset(asset);
+    } catch (e) {
+      if (!_isAssetLookupFailure(e)) {
+        rethrow;
+      }
+      // When consumed as a dependency, package assets are prefixed.
+      return ui.FragmentProgram.fromAsset('packages/tgc_maker/$asset');
+    }
+  }
+
+  bool _isAssetLookupFailure(Object error) {
+    final message = error.toString();
+    return message.contains('Asset') && message.contains('not found');
+  }
 
   Future<void> loadFonts() async {
     try {

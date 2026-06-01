@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tgc_maker/models/card_face.dart';
 import 'package:tgc_maker/models/card_layer.dart';
 import 'package:tgc_maker/persistence/card_store.dart';
 import 'package:tgc_maker/screens/export_screen.dart';
@@ -8,6 +9,7 @@ import 'package:tgc_maker/state/editor_model.dart';
 import 'package:tgc_maker/widgets/card_preview_widget.dart';
 import 'package:tgc_maker/widgets/common/rename_dialog.dart';
 import 'package:tgc_maker/widgets/effect_controls.dart';
+import 'package:tgc_maker/widgets/flip_card.dart';
 import 'package:tgc_maker/widgets/frame_editor.dart';
 import 'package:tgc_maker/widgets/layer_panel.dart';
 
@@ -151,6 +153,12 @@ class _WideLayout extends StatelessWidget {
     context.read<EditorModel>().selectLayer(layerIndex);
   }
 
+  void _flipCard(BuildContext context) {
+    // Selection indexes into the active face's layer list, so clear it.
+    context.read<EditorModel>().selectLayer(null);
+    context.read<CardModel>().flip();
+  }
+
   void _moveSelectedLayer(BuildContext context, int layerIndex, Offset delta) {
     final card = context.read<CardModel>();
     final layers = card.document.sortedLayers;
@@ -192,25 +200,45 @@ class _WideLayout extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.read<EditorModel>().selectLayer(null),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: CardPreviewWidget(
-                    document: card.document,
-                    shaderPrograms: editor.shaders,
-                    images: card.images,
-                    maxWidth: 280,
-                    maxHeight: 400,
-                    selectedLayerIndex: editor.selectedLayerIndex,
-                    onLayerDoubleTap: (index) => _selectLayer(context, index),
-                    onLayerDrag: (index, delta) =>
-                        _moveSelectedLayer(context, index, delta),
+            child: Stack(
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.read<EditorModel>().selectLayer(null),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: FlipCard(
+                        showBack: card.document.activeSide == CardSide.back,
+                        builder: (context, showingBack) => CardPreviewWidget(
+                          document: card.document.copyWith(
+                            activeSide: showingBack
+                                ? CardSide.back
+                                : CardSide.front,
+                          ),
+                          shaderPrograms: editor.shaders,
+                          images: card.images,
+                          maxWidth: 280,
+                          maxHeight: 400,
+                          selectedLayerIndex: editor.selectedLayerIndex,
+                          onLayerDoubleTap: (index) =>
+                              _selectLayer(context, index),
+                          onLayerDrag: (index, delta) =>
+                              _moveSelectedLayer(context, index, delta),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: _FlipButton(
+                    side: card.document.activeSide,
+                    onPressed: () => _flipCard(context),
+                  ),
+                ),
+              ],
             ),
           ),
           if (editor.selectedLayerIndex != null &&
@@ -240,6 +268,53 @@ class _NarrowLayout extends StatefulWidget {
 
   @override
   State<_NarrowLayout> createState() => _NarrowLayoutState();
+}
+
+class _FlipButton extends StatelessWidget {
+  final CardSide side;
+  final VoidCallback onPressed;
+
+  const _FlipButton({required this.side, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final isBack = side == CardSide.back;
+    return Material(
+      color: const Color(0xFF1C1C28),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.flip_camera_android_outlined,
+                size: 16,
+                color: Colors.white70,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                isBack ? 'BACK' : 'FRONT',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 enum _Panel { layers, layer, frame }
@@ -300,22 +375,52 @@ class _NarrowLayoutState extends State<_NarrowLayout> {
         children: [
           SizedBox(
             height: previewHeight,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.read<EditorModel>().selectLayer(null),
-              child: Center(
-                child: CardPreviewWidget(
-                  document: card.document,
-                  shaderPrograms: editor.shaders,
-                  images: card.images,
-                  maxWidth: MediaQuery.sizeOf(context).width - 48,
-                  maxHeight: previewHeight - 16,
-                  selectedLayerIndex: editor.selectedLayerIndex,
-                  onLayerDoubleTap: (index) => _openLayerEditor(context, index),
-                  onLayerDrag: (index, delta) =>
-                      _moveSelectedLayer(context, index, delta),
+            child: Stack(
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.read<EditorModel>().selectLayer(null),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SizedBox(
+                        width: 280,
+                        height: 400,
+                        child: FlipCard(
+                          showBack: card.document.activeSide == CardSide.back,
+                          builder: (context, showingBack) => CardPreviewWidget(
+                            document: card.document.copyWith(
+                              activeSide: showingBack
+                                  ? CardSide.back
+                                  : CardSide.front,
+                            ),
+                            shaderPrograms: editor.shaders,
+                            images: card.images,
+                            maxWidth: 280,
+                            maxHeight: 400,
+                            selectedLayerIndex: editor.selectedLayerIndex,
+                            onLayerDoubleTap: (index) =>
+                                _openLayerEditor(context, index),
+                            onLayerDrag: (index, delta) =>
+                                _moveSelectedLayer(context, index, delta),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: _FlipButton(
+                    side: card.document.activeSide,
+                    onPressed: () {
+                      context.read<EditorModel>().selectLayer(null);
+                      context.read<CardModel>().flip();
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           const Divider(height: 1, color: Colors.white12),

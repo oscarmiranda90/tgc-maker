@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:tgc_maker/core/card_sizes.dart';
 import 'package:tgc_maker/models/card_document.dart';
+import 'package:tgc_maker/models/card_face.dart';
 import 'package:tgc_maker/models/card_layer.dart';
 import 'package:tgc_maker/models/frame_config.dart';
 import 'package:tgc_maker/models/layer_group.dart';
@@ -32,6 +33,21 @@ class CardModel extends ChangeNotifier {
   void setSize(CardSize size) {
     _document = _document.copyWith(size: size);
     notifyListeners();
+  }
+
+  CardSide get activeSide => _document.activeSide;
+
+  void setActiveSide(CardSide side) {
+    if (_document.activeSide == side) return;
+    _document = _document.copyWith(activeSide: side);
+    notifyListeners();
+  }
+
+  /// Flips to the other side of the card.
+  void flip() {
+    setActiveSide(
+      _document.activeSide == CardSide.front ? CardSide.back : CardSide.front,
+    );
   }
 
   void setTitle(String title) {

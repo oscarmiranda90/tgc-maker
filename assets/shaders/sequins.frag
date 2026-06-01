@@ -24,6 +24,16 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+vec3 sequinsPalette(float idx) {
+    if (idx < 0.5) return vec3(0.13, 0.85, 0.88);  // gold
+    if (idx < 1.5) return vec3(0.97, 0.70, 0.82);  // rose-gold
+    if (idx < 2.5) return vec3(0.60, 0.55, 0.90);  // silver-blue
+    if (idx < 3.5) return vec3(0.42, 0.90, 0.75);  // emerald
+    if (idx < 4.5) return vec3(0.02, 0.85, 0.78);  // ruby
+    if (idx < 5.5) return vec3(0.78, 0.80, 0.85);  // violet
+    return vec3(0.07, 0.75, 0.92);                 // copper
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 void main() {
     vec2 fragCoord = FlutterFragCoord().xy;
@@ -51,19 +61,10 @@ void main() {
     // Real sequins come in batches of the same dye-lot — only a handful
     // of distinct colours appear across the garment.
     // Palette: gold, rose-gold, silver-blue, emerald, ruby, violet, copper
-    vec3 palette[7];
-    palette[0] = vec3(0.13, 0.85, 0.88);  // gold
-    palette[1] = vec3(0.97, 0.70, 0.82);  // rose-gold
-    palette[2] = vec3(0.60, 0.55, 0.90);  // silver-blue
-    palette[3] = vec3(0.42, 0.90, 0.75);  // emerald
-    palette[4] = vec3(0.02, 0.85, 0.78);  // ruby
-    palette[5] = vec3(0.78, 0.80, 0.85);  // violet
-    palette[6] = vec3(0.07, 0.75, 0.92);  // copper
-
-    int paletteIdx = uPalette >= 0.0
-        ? int(uPalette)
-        : int(rand(cellID + vec2(5.1, 2.3)) * 7.0);
-    vec3 chosenHSV = palette[paletteIdx];
+    float paletteIdx = uPalette >= 0.0
+        ? floor(clamp(uPalette, 0.0, 6.0))
+        : floor(rand(cellID + vec2(5.1, 2.3)) * 7.0);
+    vec3 chosenHSV = sequinsPalette(paletteIdx);
     vec3 discBase  = hsv2rgb(vec3(chosenHSV.x, chosenHSV.y, chosenHSV.z * 0.30));
 
     // ── Random micro-tilt per sequin ──────────────────────────────────────────

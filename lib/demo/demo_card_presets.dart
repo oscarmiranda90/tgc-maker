@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tgc_maker/core/card_sizes.dart';
 import 'package:tgc_maker/engine/shader_registry.dart';
 import 'package:tgc_maker/models/card_document.dart';
+import 'package:tgc_maker/models/card_face.dart';
 import 'package:tgc_maker/models/card_layer.dart';
 import 'package:tgc_maker/models/layer_group.dart';
 import 'package:tgc_maker/models/shader_config.dart';
@@ -13,7 +14,7 @@ class DemoCardPresets {
         id: 'demo_holo',
         title: 'Holographic',
         size: CardSize.standard,
-        layers: [
+        front: CardFace(layers: [
           ColorLayer(
             id: 'demo_holo_bg',
             group: LayerGroup.background,
@@ -47,14 +48,14 @@ class DemoCardPresets {
             position: const Offset(0, 60),
             depthFactor: 0.0,
           ),
-        ],
+        ]),
       );
 
   static CardDocument get sparkle => CardDocument(
         id: 'demo_sparkle',
         title: 'Sparkle',
         size: CardSize.standard,
-        layers: [
+        front: CardFace(layers: [
           ColorLayer(
             id: 'demo_sparkle_bg',
             group: LayerGroup.background,
@@ -77,14 +78,14 @@ class DemoCardPresets {
             color: Colors.white,
             depthFactor: 0.2,
           ),
-        ],
+        ]),
       );
 
   static CardDocument get sequins => CardDocument(
         id: 'demo_sequins',
         title: 'Sequins',
         size: CardSize.standard,
-        layers: [
+        front: CardFace(layers: [
           ColorLayer(
             id: 'demo_sequins_bg',
             group: LayerGroup.background,
@@ -108,6 +109,6 @@ class DemoCardPresets {
             color: Colors.white,
             depthFactor: 0.3,
           ),
-        ],
+        ]),
       );
 }

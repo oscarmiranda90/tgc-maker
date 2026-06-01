@@ -1,0 +1,63 @@
+{
+    "schemaVersion": "1.0.0",
+    "id": "integrator_sample",
+    "title": "Integrator Sample",
+    "size": {
+        "preset": "standard",
+        "widthPx": 750,
+        "heightPx": 1050,
+        "label": "Standard (63x88 mm)"
+    },
+    "cornerRadius": 18.0,
+    "frameWindowInset": 12.0,
+    "frameWindowRadius": 10.0,
+    "activeSide": "front",
+    "front": {
+        "layers": [
+            {
+                "type": "ColorLayer",
+                "id": "sample_bg",
+                "group": "background",
+                "zIndex": 0,
+                "name": "Background",
+                "visible": true,
+                "opacity": 1.0,
+                "posX": 0.0,
+                "posY": 0.0,
+                "scale": 1.0,
+                "rotation": 0.0,
+                "depthFactor": 0.0,
+                "color": 4281851948,
+                "shaderConfig": {
+                    "shaderAsset": "assets/shaders/holographic.frag",
+                    "opacity": 0.9,
+                    "blendMode": 18,
+                    "sequinsPalette": -1
+                }
+            },
+            {
+                "type": "TextLayer",
+                "id": "sample_title",
+                "group": "layout",
+                "zIndex": 10,
+                "name": "Title",
+                "visible": true,
+                "opacity": 1.0,
+                "posX": 0.0,
+                "posY": 0.0,
+                "scale": 1.0,
+                "rotation": 0.0,
+                "depthFactor": 0.2,
+                "text": "INTEGRATOR",
+                "fontSize": 36.0,
+                "color": 4294967295,
+                "align": "center",
+                "fontWeight": 700,
+                "fontFamily": "Roboto"
+            }
+        ]
+    },
+    "back": {
+        "layers": []
+    }
+}

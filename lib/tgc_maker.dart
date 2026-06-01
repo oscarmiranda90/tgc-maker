@@ -18,6 +18,7 @@ export 'models/card_document.dart';
 export 'models/card_layer.dart';
 export 'models/layer_group.dart';
 export 'models/shader_config.dart';
+export 'persistence/card_document_codec.dart';
 export 'parallax/parallax_card.dart';
 export 'parallax/tilt_controller.dart';
 export 'parallax/tilt_state.dart';

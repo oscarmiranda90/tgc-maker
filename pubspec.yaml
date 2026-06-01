@@ -1,8 +1,17 @@
 name: tgc_maker
-description: Open-source Flutter framework for creating holographic TGC cards with parallax and shader effects.
+description: Flutter toolkit and app for creating holographic TGC cards with parallax and shader effects.
 version: 0.1.0
 homepage: https://github.com/tgcmaker/tgc-maker
-publish_to: none
+repository: https://github.com/tgcmaker/tgc-maker
+issue_tracker: https://github.com/tgcmaker/tgc-maker/issues
+documentation: https://github.com/tgcmaker/tgc-maker#readme
+
+topics:
+  - flutter
+  - tgc
+  - cards
+  - shaders
+  - parallax
 
 environment:
   sdk: ^3.12.0

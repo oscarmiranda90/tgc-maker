@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:tgc_maker/engine/card_painter.dart';
+import 'package:tgc_maker/engine/text_fonts.dart';
 import 'package:tgc_maker/models/card_document.dart';
 import 'package:tgc_maker/models/card_layer.dart';
 
@@ -110,6 +111,7 @@ class LayerGeometry {
           color: layer.color,
           fontSize: layer.fontSize * layer.scale,
           fontWeight: layer.fontWeight,
+          fontFamily: TextFonts.familyOf(layer.fontFamily),
         ),
       )
       ..addText(layer.text);
